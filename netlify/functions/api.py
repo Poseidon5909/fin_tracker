@@ -11,3 +11,7 @@ from app import app
 
 def handler(event, context):
 	return serverless_wsgi.handle_request(app, event, context)
+
+
+def main(event, context):
+	return handler(event, context)
