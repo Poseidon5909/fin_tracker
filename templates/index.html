@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% set title = 'FinTrack Dashboard' %}
+
+{% block content %}
+<section class="hero panel">
+  <div>
+    <p class="eyebrow">Daily tracker</p>
+    <h2>Log what you spend today and review the month as it grows.</h2>
+    <p class="lede">Capture expenses by day, see today's total at a glance, and jump straight into a monthly report when you need the bigger picture.</p>
+  </div>
+  <form class="month-switcher" method="get" action="{{ url_for('dashboard') }}">
+    <label for="month">Month</label>
+    <select id="month" name="month" onchange="this.form.submit()">
+      {% for option in month_options %}
+        <option value="{{ option }}" {% if option == selected_month %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+    <input type="hidden" name="day" value="{{ selected_day }}">
+  </form>
+</section>
+
+<section class="grid stats-grid">
+  <article class="card stat">
+    <span>Month total</span>
+    <strong>₹{{ '%.2f'|format(monthly.total) }}</strong>
+    <small>{{ monthly.count }} entries in {{ selected_month }}</small>
+  </article>
+  <article class="card stat">
+    <span>Today total</span>
+    <strong>₹{{ '%.2f'|format(today_expenses | sum(attribute='amount')) }}</strong>
+    <small>{{ selected_day }}</small>
+  </article>
+  <article class="card stat">
+    <span>Top category</span>
+    <strong>{{ monthly.top_category.category if monthly.top_category else 'No data' }}</strong>
+    <small>{% if monthly.top_category %}₹{{ '%.2f'|format(monthly.top_category.total) }} spent{% else %}Add your first expense{% endif %}</small>
+  </article>
+  <article class="card stat">
+    <span>Average per entry</span>
+    <strong>₹{{ '%.2f'|format(monthly.average) }}</strong>
+    <small>Monthly running average</small>
+  </article>
+</section>
+
+<section class="grid two-col">
+  <section class="card panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Add expense</p>
+        <h3>Record a daily transaction</h3>
+      </div>
+    </div>
+    <form class="expense-form" method="post">
+      <label>Date</label>
+      <input type="date" name="spent_on" value="{{ selected_day }}" required>
+
+      <label>Category</label>
+      <select name="category" required>
+        <option value="">Choose category</option>
+        {% for category in categories %}
+          <option value="{{ category }}">{{ category }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Description</label>
+      <input type="text" name="description" placeholder="Coffee, bus fare, rent, etc." required>
+
+      <label>Amount</label>
+      <input type="number" step="0.01" min="0" name="amount" placeholder="0.00" required>
+
+      <button type="submit" class="btn primary">Save expense</button>
+    </form>
+  </section>
+
+  <section class="card panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Month snapshot</p>
+        <h3>What this month looks like</h3>
+      </div>
+      <a class="btn ghost" href="{{ url_for('report', month=selected_month) }}">Open report</a>
+    </div>
+    <div class="mini-metrics">
+      <div>
+        <span>Total</span>
+        <strong>₹{{ '%.2f'|format(monthly.total) }}</strong>
+      </div>
+      <div>
+        <span>Busiest day</span>
+        <strong>{{ monthly.top_day.day if monthly.top_day else 'No data' }}</strong>
+      </div>
+      <div>
+        <span>Entries</span>
+        <strong>{{ monthly.count }}</strong>
+      </div>
+    </div>
+    <div class="breakdown-list">
+      {% for row in monthly.category_breakdown[:5] %}
+        <div class="breakdown-row">
+          <span>{{ row.category }}</span>
+          <strong>₹{{ '%.2f'|format(row.total) }}</strong>
+        </div>
+      {% else %}
+        <p class="muted">No expenses recorded yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+
+<section class="grid two-col">
+  <section class="card panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Today</p>
+        <h3>Expenses logged for {{ selected_day }}</h3>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for expense in today_expenses %}
+            <tr>
+              <td>{{ expense.category }}</td>
+              <td>{{ expense.description }}</td>
+              <td>₹{{ '%.2f'|format(expense.amount) }}</td>
+              <td class="actions">
+                <a href="{{ url_for('edit_expense', expense_id=expense.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('remove_expense', expense_id=expense.id) }}" onsubmit="return confirm('Delete this expense?');">
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" class="empty">No entries for this day.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Recent</p>
+        <h3>Latest expense activity</h3>
+      </div>
+    </div>
+    <div class="activity-list">
+      {% for expense in recent_expenses %}
+        <article class="activity-item">
+          <div>
+            <strong>{{ expense.category }}</strong>
+            <p>{{ expense.description }}</p>
+          </div>
+          <div class="activity-meta">
+            <span>{{ expense.spent_on }}</span>
+            <strong>₹{{ '%.2f'|format(expense.amount) }}</strong>
+          </div>
+        </article>
+      {% else %}
+        <p class="muted">Add a few expenses and they will appear here.</p>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+{% endblock %}

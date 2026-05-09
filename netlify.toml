@@ -1,0 +1,12 @@
+[build]
+command = "pip install -r requirements.txt"
+functions = "netlify/functions"
+publish = "."
+
+[env.production]
+FLASK_ENV = "production"
+
+[[redirects]]
+from = "/*"
+to = "/.netlify/functions/api"
+status = 200

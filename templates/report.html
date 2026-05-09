@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% set title = 'Monthly Report' %}
+
+{% block content %}
+<section class="hero panel">
+  <div>
+    <p class="eyebrow">Monthly report</p>
+    <h2>End-of-month spending summary for {{ selected_month }}</h2>
+    <p class="lede">This report shows the totals, categories, and daily trend for the selected month so you can close out spending cleanly.</p>
+  </div>
+  <form class="month-switcher" method="get" action="{{ url_for('report') }}">
+    <label for="month">Month</label>
+    <select id="month" name="month" onchange="this.form.submit()">
+      {% for option in month_options %}
+        <option value="{{ option }}" {% if option == selected_month %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</section>
+
+<section class="grid stats-grid">
+  <article class="card stat">
+    <span>Total spent</span>
+    <strong>₹{{ '%.2f'|format(monthly.total) }}</strong>
+    <small>{{ monthly.count }} expenses</small>
+  </article>
+  <article class="card stat">
+    <span>Average entry</span>
+    <strong>₹{{ '%.2f'|format(monthly.average) }}</strong>
+    <small>Across the month</small>
+  </article>
+  <article class="card stat">
+    <span>Top category</span>
+    <strong>{{ monthly.top_category.category if monthly.top_category else 'No data' }}</strong>
+    <small>{% if monthly.top_category %}₹{{ '%.2f'|format(monthly.top_category.total) }} total{% endif %}</small>
+  </article>
+  <article class="card stat">
+    <span>Busiest day</span>
+    <strong>{{ monthly.top_day.day if monthly.top_day else 'No data' }}</strong>
+    <small>{% if monthly.top_day %}₹{{ '%.2f'|format(monthly.top_day.total) }} spent{% endif %}</small>
+  </article>
+</section>
+
+<section class="grid two-col">
+  <section class="card panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Category breakdown</p>
+        <h3>Where the money went</h3>
+      </div>
+    </div>
+    <div class="breakdown-list">
+      {% for row in monthly.category_breakdown %}
+        <div class="breakdown-row">
+          <span>{{ row.category }}</span>
+          <strong>₹{{ '%.2f'|format(row.total) }}</strong>
+        </div>
+      {% else %}
+        <p class="muted">No spending recorded for this month.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Daily trend</p>
+        <h3>Spending by day</h3>
+      </div>
+    </div>
+    <div class="breakdown-list">
+      {% for row in monthly.daily_breakdown %}
+        <div class="breakdown-row">
+          <span>{{ row.day }}</span>
+          <strong>₹{{ '%.2f'|format(row.total) }}</strong>
+        </div>
+      {% else %}
+        <p class="muted">No data yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</section>
+
+<section class="card panel">
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">Transactions</p>
+      <h3>All entries in this month</h3>
+    </div>
+    <a class="btn ghost" href="{{ url_for('dashboard', month=selected_month) }}">Back to dashboard</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Description</th>
+          <th>Amount</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for expense in monthly.expenses %}
+          <tr>
+            <td>{{ expense.spent_on }}</td>
+            <td>{{ expense.category }}</td>
+            <td>{{ expense.description }}</td>
+            <td>₹{{ '%.2f'|format(expense.amount) }}</td>
+            <td class="actions">
+              <a href="{{ url_for('edit_expense', expense_id=expense.id) }}">Edit</a>
+              <form method="post" action="{{ url_for('remove_expense', expense_id=expense.id) }}" onsubmit="return confirm('Delete this expense?');">
+                <button type="submit">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="empty">No transactions found for this month.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

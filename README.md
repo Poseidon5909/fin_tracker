@@ -1,82 +1,46 @@
 # Fin Tracker
 
-A small personal finance tracker that supports recording, viewing, updating, searching and visualizing expenses.
+A browser-based personal expense tracker with daily logging and end-of-month reporting. Deploy to Netlify in minutes!
 
-**Features**
-- **Add Expense:** record amount, category, date, and notes (`fintrack.py`).
-- **View Expenses:** list and filter recorded expenses.
-- **Update / Delete:** modify or remove existing records.
-- **Search Expenses:** search by text, date, or category.
-- **GUI:** desktop interface implemented in `fin_gui.py` using `tkinter` and `ttkbootstrap`.
-- **Analytics / Charts:** category and monthly expense visualizations using `matplotlib` (`fin_analytics.py`).
-- **Database-backed:** persistent storage via the DB connector in `db/db/db_connect.py`.
-- **Tests:** basic unit tests in `test_fintrack.py`.
+**What it does**
+- Add, edit, and delete expenses from a web dashboard.
+- Track today's spending separately from the current month's total.
+- Show a monthly report with category breakdowns, daily totals, average spend, and busiest day.
+- Store data locally in SQLite (or cloud database for persistence).
 
-**Technologies Used**
-- **Language:** Python 3
-- **GUI:** `tkinter` + `ttkbootstrap`
-- **Charts:** `matplotlib`
-- **Database driver:** `psycopg2` (PostgreSQL)
-- **Standard libs:** `datetime`, `os`, and others from the Python stdlib
-
-**Quick Start**
+**Run it locally**
 1. Install Python 3.8+.
 2. Install dependencies:
 
 ```bash
-pip install psycopg2-binary matplotlib ttkbootstrap
+pip install -r requirements.txt
 ```
 
-3. Configure your PostgreSQL connection in `db/db/db_connect.py`.
-4. Run the app:
+3. Start the web app:
 
 ```bash
 python main.py
 ```
 
-**Notes**
-- If you prefer a different DB adapter (or use local SQLite for quick tests), adjust `db/db/db_connect.py` accordingly.
-- Want more detail in this README? Tell me which sections to expand (install, config, examples, screenshots).
+4. Open the app in your browser at `http://127.0.0.1:5000/`.
 
-**Database (details)**
-- **Connector file:** the project uses `db/db/db_connect.py` to create a DB connection.
-- **Driver:** `psycopg2` (PostgreSQL). The current connector uses the following default parameters:
+## Deploy to Netlify
 
-```python
-import psycopg2
+1. Push this repo to GitHub.
+2. Go to [netlify.com](https://netlify.com) and sign up.
+3. Click **Add new site** → **Import an existing project**.
+4. Select your GitHub repo.
+5. Set environment variables:
+   - `FIN_TRACK_SECRET`: Generate a strong random string
+   - `FLASK_ENV`: `production`
+6. Deploy!
 
-def get_connection():
-	conn = psycopg2.connect(
-		host="localhost",
-		database="fintrack_db",
-		user="postgres",
-		password="pass123"
-	)
-	return conn
-```
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed setup and alternatives.
 
-- **What to change:** update the host, database, user, and password in `db/db/db_connect.py` to match your PostgreSQL instance, or replace the connection construction to read from environment variables.
-- **Security note:** don't commit production credentials. Prefer using environment variables or a local configuration file excluded from version control. Example using env vars:
-
-```python
-import os
-import psycopg2
-
-def get_connection():
-	return psycopg2.connect(
-		host=os.getenv('FIN_DB_HOST', 'localhost'),
-		database=os.getenv('FIN_DB_NAME', 'fintrack_db'),
-		user=os.getenv('FIN_DB_USER', 'postgres'),
-		password=os.getenv('FIN_DB_PASS')
-	)
-```
-
-- **Quick DB setup:** create the database and user before running the app:
-
-```bash
-# (psql)
-CREATE DATABASE fintrack_db;
--- create user / set password and grant privileges as needed
-```
-
-- **Troubleshooting:** if `get_connection()` returns `None` or prints an error, verify PostgreSQL is running and credentials are correct.
+**Project layout**
+- `main.py` starts the Flask app locally.
+- `app.py` contains the routes and page logic.
+- `expense_store.py` manages the SQLite database in `data/expenses.db`.
+- `netlify/functions/api.py` wraps the Flask app for Netlify Functions.
+- `templates/` contains the dashboard, report, and edit pages.
+- `static/styles.css` holds the UI styling.
