@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
 
-# Add the parent directory to the path so we can import app
+# Add the project root so the function can import the Flask app.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from serverless_http import Handler
+import serverless_wsgi
+
 from app import app
 
-# Create the handler for Netlify Functions
-handler = Handler(app)
+
+def handler(event, context):
+	return serverless_wsgi.handle_request(app, event, context)
